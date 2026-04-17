@@ -29,7 +29,7 @@
       padding:10px;
     }
     .sheet{
-      max-width:980px;
+      max-width:1120px;
       margin:0 auto;
       background:var(--card);
       border:1px solid var(--line);
@@ -83,21 +83,90 @@
       color:var(--muted);
       font-size:.92rem;
     }
+    .summary-wrap{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap:12px;
+      padding:14px 16px;
+      border-bottom:1px solid var(--line);
+      background:#fff;
+    }
+    .info-card{
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px 14px;
+      background:#fff;
+    }
+    .info-card h2{
+      margin:0 0 6px 0;
+      font-size:1rem;
+    }
+    .metric{
+      font-size:1.55rem;
+      font-weight:700;
+      line-height:1.1;
+      margin-bottom:4px;
+    }
+    .muted{
+      color:var(--muted);
+      font-size:.9rem;
+    }
+    .range-grid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap:6px 14px;
+      font-size:.95rem;
+    }
+    .chart-wrap{
+      padding:14px 16px 16px 16px;
+      border-bottom:1px solid var(--line);
+      background:#fff;
+    }
+    .chart-title{
+      margin:0 0 10px 0;
+      font-size:1rem;
+      font-weight:700;
+    }
+    .chart-box{
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#fff;
+      padding:10px;
+      overflow-x:auto;
+    }
+    svg{display:block; width:100%; height:auto;}
+    .legend{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      margin-top:10px;
+      font-size:.9rem;
+      color:var(--muted);
+    }
+    .legend span{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:999px;display:inline-block;
+    }
     .table-wrap{
       overflow-x:auto;
       -webkit-overflow-scrolling:touch;
     }
     table{
       width:100%;
-      min-width:860px;
+      min-width:920px;
       border-collapse:collapse;
       table-layout:fixed;
     }
-    colgroup col:nth-child(1){width:20%}
-    colgroup col:nth-child(2){width:13%}
-    colgroup col:nth-child(3){width:22%}
-    colgroup col:nth-child(4){width:22%}
-    colgroup col:nth-child(5){width:18%}
+    colgroup col:nth-child(1){width:18%}
+    colgroup col:nth-child(2){width:12%}
+    colgroup col:nth-child(3){width:17%}
+    colgroup col:nth-child(4){width:17%}
+    colgroup col:nth-child(5){width:14%}
+    colgroup col:nth-child(6){width:22%}
     thead th{
       text-align:left;
       font-size:.96rem;
@@ -135,16 +204,24 @@
       border-color:#b7d1ff;
       background:#f8fbff;
     }
+    .row-note{
+      font-size:.84rem;
+      color:var(--muted);
+    }
     .hint{
       padding:12px 16px 16px 16px;
       color:var(--muted);
       font-size:.92rem;
+    }
+    @media (max-width: 900px){
+      .summary-wrap{grid-template-columns:1fr}
     }
     @media print{
       @page{size:A4 portrait; margin:12mm}
       body{background:#fff; padding:0}
       .sheet{max-width:none; border:none; border-radius:0; box-shadow:none}
       .toolbar,.hint{display:none !important}
+      .chart-wrap,.summary-wrap{break-inside:avoid}
       .header{padding:0 0 6mm 0; background:#fff}
       h1{font-size:17pt}
       .sub{font-size:10pt}
@@ -166,7 +243,7 @@
   <div class="sheet">
     <div class="header">
       <h1>Kreislaufmessung</h1>
-      <p class="sub">Eine einzelne HTML-App-Datei zum Öffnen im Browser.</p>
+      <p class="sub">Mit Durchschnittswerten, Verlauf, CSV-Export und lokaler Speicherung.</p>
     </div>
 
     <div class="toolbar">
@@ -177,9 +254,43 @@
       <div class="status" id="status">Speichert automatisch auf diesem Gerät</div>
     </div>
 
+    <div class="summary-wrap">
+      <div class="info-card">
+        <h2>Durchschnittswerte</h2>
+        <div class="metric" id="avgMetric">–</div>
+        <div class="muted" id="avgDetail">Noch keine Werte vorhanden</div>
+      </div>
+      <div class="info-card">
+        <h2>Bereich</h2>
+        <div class="range-grid">
+          <div>Systolisch: <strong id="sysRange">–</strong></div>
+          <div>Diastolisch: <strong id="diaRange">–</strong></div>
+          <div>Puls: <strong id="pulseRange">–</strong></div>
+          <div>Messungen: <strong id="countMetric">0</strong></div>
+        </div>
+      </div>
+      <div class="info-card">
+        <h2>Letzte Messung</h2>
+        <div class="metric" id="lastMetric">–</div>
+        <div class="muted" id="lastDetail">Noch kein Eintrag</div>
+      </div>
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-title">Verlauf</div>
+      <div class="chart-box">
+        <svg id="trendChart" viewBox="0 0 900 260" role="img" aria-label="Verlauf von RR systolisch, RR diastolisch und Puls"></svg>
+        <div class="legend">
+          <span><i class="dot" style="background:#2f6fed"></i> RR systolisch</span>
+          <span><i class="dot" style="background:#12b76a"></i> RR diastolisch</span>
+          <span><i class="dot" style="background:#f79009"></i> Puls / Min.</span>
+        </div>
+      </div>
+    </div>
+
     <div class="table-wrap">
       <table>
-        <colgroup><col><col><col><col><col></colgroup>
+        <colgroup><col><col><col><col><col><col></colgroup>
         <thead>
           <tr>
             <th>Datum</th>
@@ -187,6 +298,7 @@
             <th>RR systolisch</th>
             <th>RR diastolisch</th>
             <th>Puls / Min.</th>
+            <th>Hinweis</th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
@@ -194,12 +306,12 @@
     </div>
 
     <div class="hint">
-      Diese Datei direkt in Safari öffnen. Die Einträge werden lokal im Browser gespeichert. Über „Teilen“ → „Zum Home-Bildschirm“ kannst du sie wie eine App verwenden.
+      Durchschnitt und Verlauf werden automatisch aus allen vollständig eingetragenen Messungen berechnet. Für den Verlauf werden die letzten 20 Messungen angezeigt.
     </div>
   </div>
 
   <script>
-    const STORAGE_KEY = "kreislaufmessung_singlefile_v1";
+    const STORAGE_KEY = "kreislaufmessung_singlefile_v2";
     const tbody = document.getElementById("tbody");
     const statusEl = document.getElementById("status");
 
@@ -229,6 +341,17 @@
       return input;
     }
 
+    function noteText(sys, dia, pulse){
+      if (!sys || !dia || !pulse) return "";
+      const s = Number(sys), d = Number(dia), p = Number(pulse);
+      if (s >= 180 || d >= 120) return "sehr hoch";
+      if (s >= 140 || d >= 90) return "erhöht";
+      if (s < 90 || d < 60) return "niedrig";
+      if (p > 100) return "Puls erhöht";
+      if (p < 50) return "Puls niedrig";
+      return "unauffällig";
+    }
+
     function appendRow(data = emptyRow()){
       const tr = document.createElement("tr");
       const cells = [
@@ -243,16 +366,21 @@
         td.appendChild(input);
         tr.appendChild(td);
       });
+      const noteTd = document.createElement("td");
+      noteTd.className = "row-note";
+      noteTd.textContent = noteText(data.sys, data.dia, data.pulse);
+      tr.appendChild(noteTd);
       tbody.appendChild(tr);
     }
 
     function render(rows){
       tbody.innerHTML = "";
       rows.forEach(appendRow);
+      updateSummaryAndChart();
     }
 
-    function saveData(){
-      const rows = [...tbody.querySelectorAll("tr")].map(tr => {
+    function rowsFromDOM(){
+      return [...tbody.querySelectorAll("tr")].map(tr => {
         const inputs = tr.querySelectorAll("input");
         return {
           date: inputs[0].value || "",
@@ -262,12 +390,155 @@
           pulse: inputs[4].value || ""
         };
       });
+    }
+
+    function validMeasurements(rows){
+      return rows
+        .map((r, idx) => ({
+          ...r,
+          index: idx + 1,
+          sysNum: Number(r.sys),
+          diaNum: Number(r.dia),
+          pulseNum: Number(r.pulse)
+        }))
+        .filter(r =>
+          r.date &&
+          r.time &&
+          Number.isFinite(r.sysNum) &&
+          Number.isFinite(r.diaNum) &&
+          Number.isFinite(r.pulseNum)
+        );
+    }
+
+    function formatDateTime(row){
+      const date = row.date ? row.date.split("-").reverse().join(".") : "";
+      return [date, row.time].filter(Boolean).join(" ");
+    }
+
+    function average(arr){
+      return arr.length ? (arr.reduce((a,b) => a+b, 0) / arr.length) : null;
+    }
+
+    function minmax(arr){
+      return arr.length ? [Math.min(...arr), Math.max(...arr)] : null;
+    }
+
+    function updateSummaryAndChart(){
+      const rows = rowsFromDOM();
+
+      [...tbody.querySelectorAll("tr")].forEach(tr => {
+        const inputs = tr.querySelectorAll("input");
+        tr.querySelector(".row-note").textContent = noteText(inputs[2].value, inputs[3].value, inputs[4].value);
+      });
+
+      const valid = validMeasurements(rows);
+      const sysVals = valid.map(r => r.sysNum);
+      const diaVals = valid.map(r => r.diaNum);
+      const pulseVals = valid.map(r => r.pulseNum);
+
+      const avgSys = average(sysVals);
+      const avgDia = average(diaVals);
+      const avgPulse = average(pulseVals);
+
+      document.getElementById("countMetric").textContent = String(valid.length);
+      document.getElementById("avgMetric").textContent =
+        avgSys === null ? "–" : `${avgSys.toFixed(0)} / ${avgDia.toFixed(0)} | ${avgPulse.toFixed(0)}`;
+      document.getElementById("avgDetail").textContent =
+        avgSys === null ? "Noch keine Werte vorhanden" : "Durchschnitt RR / Puls";
+
+      const sysRange = minmax(sysVals);
+      const diaRange = minmax(diaVals);
+      const pulseRange = minmax(pulseVals);
+      document.getElementById("sysRange").textContent = sysRange ? `${sysRange[0]}–${sysRange[1]}` : "–";
+      document.getElementById("diaRange").textContent = diaRange ? `${diaRange[0]}–${diaRange[1]}` : "–";
+      document.getElementById("pulseRange").textContent = pulseRange ? `${pulseRange[0]}–${pulseRange[1]}` : "–";
+
+      const last = valid[valid.length - 1];
+      document.getElementById("lastMetric").textContent =
+        last ? `${last.sysNum} / ${last.diaNum} | ${last.pulseNum}` : "–";
+      document.getElementById("lastDetail").textContent =
+        last ? formatDateTime(last) : "Noch kein Eintrag";
+
+      drawChart(valid.slice(-20));
+    }
+
+    function drawChart(points){
+      const svg = document.getElementById("trendChart");
+      const width = 900, height = 260;
+      const padL = 50, padR = 20, padT = 20, padB = 36;
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+
+      if (!points.length){
+        svg.innerHTML = `
+          <rect x="0" y="0" width="${width}" height="${height}" fill="white"></rect>
+          <text x="${width/2}" y="${height/2}" text-anchor="middle" font-size="16" fill="#667085">
+            Noch keine vollständigen Messungen für den Verlauf
+          </text>`;
+        return;
+      }
+
+      const allValues = [];
+      points.forEach(p => allValues.push(p.sysNum, p.diaNum, p.pulseNum));
+      let minY = Math.min(...allValues);
+      let maxY = Math.max(...allValues);
+      minY = Math.max(30, Math.floor((minY - 10) / 10) * 10);
+      maxY = Math.ceil((maxY + 10) / 10) * 10;
+      if (maxY === minY) maxY += 10;
+
+      const plotW = width - padL - padR;
+      const plotH = height - padT - padB;
+      const xStep = points.length > 1 ? plotW / (points.length - 1) : 0;
+
+      function xAt(i){ return padL + i * xStep; }
+      function yAt(v){ return padT + (maxY - v) / (maxY - minY) * plotH; }
+
+      function poly(values){
+        return values.map((v, i) => `${i===0?'M':'L'} ${xAt(i)} ${yAt(v)}`).join(' ');
+      }
+
+      const gridLines = [];
+      const labels = [];
+      const ticks = 5;
+      for(let i=0;i<=ticks;i++){
+        const val = minY + (maxY - minY) * i / ticks;
+        const y = yAt(val);
+        gridLines.push(`<line x1="${padL}" y1="${y}" x2="${width-padR}" y2="${y}" stroke="#e6eaf0" stroke-width="1"/>`);
+        labels.push(`<text x="${padL-8}" y="${y+4}" text-anchor="end" font-size="11" fill="#667085">${Math.round(val)}</text>`);
+      }
+
+      const xLabels = points.map((p, i) =>
+        `<text x="${xAt(i)}" y="${height-12}" text-anchor="middle" font-size="11" fill="#667085">${i+1}</text>`
+      ).join("");
+
+      function circles(values, color){
+        return values.map((v, i) => `<circle cx="${xAt(i)}" cy="${yAt(v)}" r="3.5" fill="${color}"></circle>`).join("");
+      }
+
+      svg.innerHTML = `
+        <rect x="0" y="0" width="${width}" height="${height}" fill="white"></rect>
+        ${gridLines.join("")}
+        <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${height-padB}" stroke="#c7ced8" stroke-width="1"/>
+        <line x1="${padL}" y1="${height-padB}" x2="${width-padR}" y2="${height-padB}" stroke="#c7ced8" stroke-width="1"/>
+        ${labels.join("")}
+        <path d="${poly(points.map(p => p.sysNum))}" fill="none" stroke="#2f6fed" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"></path>
+        <path d="${poly(points.map(p => p.diaNum))}" fill="none" stroke="#12b76a" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"></path>
+        <path d="${poly(points.map(p => p.pulseNum))}" fill="none" stroke="#f79009" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"></path>
+        ${circles(points.map(p => p.sysNum), '#2f6fed')}
+        ${circles(points.map(p => p.diaNum), '#12b76a')}
+        ${circles(points.map(p => p.pulseNum), '#f79009')}
+        ${xLabels}
+      `;
+    }
+
+    function saveData(){
+      const rows = rowsFromDOM();
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
         setStatus("Änderungen gespeichert");
       } catch(e) {
         statusEl.textContent = "Speichern auf diesem Gerät nicht verfügbar";
       }
+      updateSummaryAndChart();
     }
 
     function loadData(){
@@ -295,13 +566,14 @@
     }
 
     function exportCSV(){
-      const rows = [["Datum","Zeit","RR systolisch","RR diastolisch","Puls / Min."]];
+      const rows = [["Datum","Zeit","RR systolisch","RR diastolisch","Puls / Min.","Hinweis"]];
       [...tbody.querySelectorAll("tr")].forEach(tr => {
         const vals = [...tr.querySelectorAll("input")].map(i => '"' + String(i.value || "").replace(/"/g, '""') + '"');
-        rows.push(vals);
+        const note = '"' + String(tr.querySelector(".row-note").textContent || "").replace(/"/g, '""') + '"';
+        rows.push([...vals, note]);
       });
-      const csv = rows.map(r => r.join(";")).join("\n");
-      const blob = new Blob(["\uFEFF" + csv], { type:"text/csv;charset=utf-8;" });
+      const csv = rows.map(r => r.join(";")).join("\\n");
+      const blob = new Blob(["\\uFEFF" + csv], { type:"text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
