@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Kreislauf">
+  <title>Kreislaufmessung</title>
+  <style>
+    :root{
+      --bg:#f4f6f8;
+      --card:#ffffff;
+      --text:#1f2937;
+      --muted:#667085;
+      --line:#d9dee6;
+      --line-strong:#c7ced8;
+      --head:#f7f9fc;
+      --accent:#2f6fed;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      -webkit-text-size-adjust:100%;
+      padding:10px;
+    }
+    .sheet{
+      max-width:980px;
+      margin:0 auto;
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      overflow:hidden;
+      box-shadow:0 8px 24px rgba(16,24,40,.05);
+    }
+    .header{
+      padding:18px 16px 12px 16px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(to bottom,#fff,#fbfcfe);
+    }
+    h1{
+      margin:0 0 4px 0;
+      font-size:1.8rem;
+      line-height:1.05;
+      letter-spacing:-.02em;
+    }
+    .sub{
+      margin:0;
+      color:var(--muted);
+      font-size:1rem;
+    }
+    .toolbar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      padding:12px 16px;
+      border-bottom:1px solid var(--line);
+      background:#fcfdff;
+      align-items:center;
+    }
+    button{
+      appearance:none;
+      border:1px solid var(--line-strong);
+      background:#fff;
+      color:var(--text);
+      padding:10px 14px;
+      border-radius:12px;
+      font:inherit;
+      font-weight:600;
+      cursor:pointer;
+    }
+    button.primary{
+      background:var(--accent);
+      color:#fff;
+      border-color:var(--accent);
+    }
+    .status{
+      width:100%;
+      color:var(--muted);
+      font-size:.92rem;
+    }
+    .table-wrap{
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+    }
+    table{
+      width:100%;
+      min-width:860px;
+      border-collapse:collapse;
+      table-layout:fixed;
+    }
+    colgroup col:nth-child(1){width:20%}
+    colgroup col:nth-child(2){width:13%}
+    colgroup col:nth-child(3){width:22%}
+    colgroup col:nth-child(4){width:22%}
+    colgroup col:nth-child(5){width:18%}
+    thead th{
+      text-align:left;
+      font-size:.96rem;
+      font-weight:700;
+      background:var(--head);
+      padding:10px 12px;
+      border-bottom:1px solid var(--line-strong);
+      position:sticky;
+      top:0;
+      z-index:2;
+    }
+    th:not(:last-child), td:not(:last-child){border-right:1px solid var(--line)}
+    tbody td{
+      padding:5px 8px;
+      border-bottom:1px solid var(--line);
+      height:40px;
+      vertical-align:middle;
+      background:#fff;
+    }
+    input{
+      display:block;
+      width:100%;
+      height:30px;
+      border:1px solid transparent;
+      background:#fff;
+      color:var(--text);
+      font:inherit;
+      padding:0 4px;
+      border-radius:6px;
+      outline:none;
+      -webkit-appearance:none;
+      appearance:none;
+    }
+    input:focus{
+      border-color:#b7d1ff;
+      background:#f8fbff;
+    }
+    .hint{
+      padding:12px 16px 16px 16px;
+      color:var(--muted);
+      font-size:.92rem;
+    }
+    @media print{
+      @page{size:A4 portrait; margin:12mm}
+      body{background:#fff; padding:0}
+      .sheet{max-width:none; border:none; border-radius:0; box-shadow:none}
+      .toolbar,.hint{display:none !important}
+      .header{padding:0 0 6mm 0; background:#fff}
+      h1{font-size:17pt}
+      .sub{font-size:10pt}
+      table{min-width:0}
+      thead th{font-size:10pt; padding:3mm 3mm}
+      tbody td{height:8.5mm; padding:1mm 2mm}
+      input{
+        border:none;
+        background:transparent;
+        height:auto;
+        padding:0;
+        font-size:10pt;
+        border-radius:0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="header">
+      <h1>Kreislaufmessung</h1>
+      <p class="sub">Eine einzelne HTML-App-Datei zum Öffnen im Browser.</p>
+    </div>
+
+    <div class="toolbar">
+      <button type="button" class="primary" id="addRowBtn">Zeile hinzufügen</button>
+      <button type="button" id="csvBtn">CSV exportieren</button>
+      <button type="button" id="printBtn">Drucken</button>
+      <button type="button" id="clearBtn">Alles löschen</button>
+      <div class="status" id="status">Speichert automatisch auf diesem Gerät</div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <colgroup><col><col><col><col><col></colgroup>
+        <thead>
+          <tr>
+            <th>Datum</th>
+            <th>Zeit</th>
+            <th>RR systolisch</th>
+            <th>RR diastolisch</th>
+            <th>Puls / Min.</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="hint">
+      Diese Datei direkt in Safari öffnen. Die Einträge werden lokal im Browser gespeichert. Über „Teilen“ → „Zum Home-Bildschirm“ kannst du sie wie eine App verwenden.
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "kreislaufmessung_singlefile_v1";
+    const tbody = document.getElementById("tbody");
+    const statusEl = document.getElementById("status");
+
+    function emptyRow(){
+      return {date:"", time:"", sys:"", dia:"", pulse:""};
+    }
+
+    function defaultRows(count=20){
+      return Array.from({length: count}, () => emptyRow());
+    }
+
+    function setStatus(text){
+      statusEl.textContent = text;
+      clearTimeout(window.__statusTimer);
+      window.__statusTimer = setTimeout(() => {
+        statusEl.textContent = "Speichert automatisch auf diesem Gerät";
+      }, 1400);
+    }
+
+    function createInput(type, value, attrs = {}){
+      const input = document.createElement("input");
+      input.type = type;
+      input.value = value || "";
+      Object.entries(attrs).forEach(([k,v]) => input.setAttribute(k, String(v)));
+      input.addEventListener("input", saveData);
+      input.addEventListener("change", saveData);
+      return input;
+    }
+
+    function appendRow(data = emptyRow()){
+      const tr = document.createElement("tr");
+      const cells = [
+        createInput("date", data.date),
+        createInput("time", data.time, { step: 60 }),
+        createInput("number", data.sys, { min: 70, max: 250, step: 1, inputmode: "numeric" }),
+        createInput("number", data.dia, { min: 50, max: 130, step: 1, inputmode: "numeric" }),
+        createInput("number", data.pulse, { min: 40, max: 200, step: 1, inputmode: "numeric" })
+      ];
+      cells.forEach(input => {
+        const td = document.createElement("td");
+        td.appendChild(input);
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    }
+
+    function render(rows){
+      tbody.innerHTML = "";
+      rows.forEach(appendRow);
+    }
+
+    function saveData(){
+      const rows = [...tbody.querySelectorAll("tr")].map(tr => {
+        const inputs = tr.querySelectorAll("input");
+        return {
+          date: inputs[0].value || "",
+          time: inputs[1].value || "",
+          sys: inputs[2].value || "",
+          dia: inputs[3].value || "",
+          pulse: inputs[4].value || ""
+        };
+      });
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
+        setStatus("Änderungen gespeichert");
+      } catch(e) {
+        statusEl.textContent = "Speichern auf diesem Gerät nicht verfügbar";
+      }
+    }
+
+    function loadData(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw) return defaultRows(20);
+        const data = JSON.parse(raw);
+        return Array.isArray(data) && data.length ? data : defaultRows(20);
+      }catch(e){
+        return defaultRows(20);
+      }
+    }
+
+    function addRow(){
+      appendRow(emptyRow());
+      saveData();
+    }
+
+    function clearAllData(){
+      if(!confirm("Alle Einträge löschen?")) return;
+      try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+      render(defaultRows(20));
+      saveData();
+      setStatus("Einträge gelöscht");
+    }
+
+    function exportCSV(){
+      const rows = [["Datum","Zeit","RR systolisch","RR diastolisch","Puls / Min."]];
+      [...tbody.querySelectorAll("tr")].forEach(tr => {
+        const vals = [...tr.querySelectorAll("input")].map(i => '"' + String(i.value || "").replace(/"/g, '""') + '"');
+        rows.push(vals);
+      });
+      const csv = rows.map(r => r.join(";")).join("\n");
+      const blob = new Blob(["\uFEFF" + csv], { type:"text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "kreislaufmessung.csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setStatus("CSV exportiert");
+    }
+
+    document.getElementById("addRowBtn").addEventListener("click", addRow);
+    document.getElementById("csvBtn").addEventListener("click", exportCSV);
+    document.getElementById("printBtn").addEventListener("click", () => window.print());
+    document.getElementById("clearBtn").addEventListener("click", clearAllData);
+
+    render(loadData());
+  </script>
+</body>
+</html>
